@@ -1,0 +1,45 @@
+{
+  "realm": "collector",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      { "name": "admin", "description": "Administrator role" },
+      { "name": "seller", "description": "Seller role" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "collector-web",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": true,
+      "rootUrl": "http://collectorshop.local",
+      "baseUrl": "/",
+      "redirectUris": ["http://collectorshop.local/*"],
+      "webOrigins": ["*"],
+      "fullScopeAllowed": true
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "User",
+      "credentials": [{ "type": "password", "value": "admin", "temporary": false }],
+      "realmRoles": ["admin"]
+    },
+    {
+      "username": "seller",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Seller",
+      "lastName": "User",
+      "credentials": [{ "type": "password", "value": "seller", "temporary": false }],
+      "realmRoles": ["seller"]
+    }
+  ]
+}

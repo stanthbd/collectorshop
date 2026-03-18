@@ -1,0 +1,504 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/part-of: collectorshop
+    env: dev
+  name: collectorshop
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/name: catalog-service
+    app.kubernetes.io/part-of: collectorshop
+    env: dev
+  name: catalog-service
+  namespace: collectorshop
+spec:
+  ports:
+  - name: http
+    port: 3000
+    targetPort: 3000
+  selector:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/name: catalog-service
+    app.kubernetes.io/part-of: collectorshop
+    env: dev
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/part-of: collectorshop
+    env: dev
+  name: postgres
+  namespace: collectorshop
+spec:
+  ports:
+  - name: postgres
+    port: 5432
+    targetPort: 5432
+  selector:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: collectorshop
+    env: dev
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/part-of: collectorshop
+    env: dev
+  name: rabbitmq
+  namespace: collectorshop
+spec:
+  ports:
+  - name: amqp
+    port: 5672
+    targetPort: 5672
+  - name: management
+    port: 15672
+    targetPort: 15672
+  selector:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/name: rabbitmq
+    app.kubernetes.io/part-of: collectorshop
+    env: dev
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/name: web-app
+    app.kubernetes.io/part-of: collectorshop
+    env: dev
+  name: web-app
+  namespace: collectorshop
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+  selector:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/name: web-app
+    app.kubernetes.io/part-of: collectorshop
+    env: dev
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/part-of: collectorshop
+    env: dev
+  name: postgres-data
+  namespace: collectorshop
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/part-of: collectorshop
+    env: dev
+  name: rabbitmq-data
+  namespace: collectorshop
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/name: catalog-service
+    app.kubernetes.io/part-of: collectorshop
+    env: dev
+  name: catalog-service
+  namespace: collectorshop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/managed-by: argocd
+      app.kubernetes.io/name: catalog-service
+      app.kubernetes.io/part-of: collectorshop
+      env: dev
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/managed-by: argocd
+        app.kubernetes.io/name: catalog-service
+        app.kubernetes.io/part-of: collectorshop
+        env: dev
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: "3000"
+        - name: DATABASE_URL
+          value: postgresql://collector:password@postgres.collectorshop.svc.cluster.local:5432/collector_db?sslmode=disable
+        - name: RABBITMQ_URL
+          value: amqp://collector:password@rabbitmq.collectorshop.svc.cluster.local:5672
+        image: ghcr.io/stanthbd/collectorshop/catalog-service:sha-be5c72742c261a2b6d6a08d8b779dc83b46b51d9
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: catalog-service
+        ports:
+        - containerPort: 3000
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        startupProbe:
+          failureThreshold: 30
+          httpGet:
+            path: /health
+            port: 3000
+          periodSeconds: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/name: moderation-worker
+    app.kubernetes.io/part-of: collectorshop
+    env: dev
+  name: moderation-worker
+  namespace: collectorshop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/managed-by: argocd
+      app.kubernetes.io/name: moderation-worker
+      app.kubernetes.io/part-of: collectorshop
+      env: dev
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/managed-by: argocd
+        app.kubernetes.io/name: moderation-worker
+        app.kubernetes.io/part-of: collectorshop
+        env: dev
+    spec:
+      containers:
+      - env:
+        - name: NODE_ENV
+          value: production
+        - name: HEALTH_PORT
+          value: "3000"
+        - name: RABBITMQ_URL
+          value: amqp://collector:password@rabbitmq.collectorshop.svc.cluster.local:5672
+        image: ghcr.io/stanthbd/collectorshop/moderation-worker:sha-be5c72742c261a2b6d6a08d8b779dc83b46b51d9
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: moderation-worker
+        ports:
+        - containerPort: 3000
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 300m
+            memory: 384Mi
+          requests:
+            cpu: 50m
+            memory: 128Mi
+        startupProbe:
+          failureThreshold: 30
+          httpGet:
+            path: /health
+            port: 3000
+          periodSeconds: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: collectorshop
+    env: dev
+  name: postgres
+  namespace: collectorshop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/managed-by: argocd
+      app.kubernetes.io/name: postgres
+      app.kubernetes.io/part-of: collectorshop
+      env: dev
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/managed-by: argocd
+        app.kubernetes.io/name: postgres
+        app.kubernetes.io/part-of: collectorshop
+        env: dev
+    spec:
+      containers:
+      - env:
+        - name: POSTGRES_USER
+          value: collector
+        - name: POSTGRES_PASSWORD
+          value: password
+        - name: POSTGRES_DB
+          value: collector_db
+        image: postgres:15-alpine
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - collector
+            - -d
+            - collector_db
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        name: postgres
+        ports:
+        - containerPort: 5432
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - collector
+            - -d
+            - collector_db
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: postgres-data
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/name: rabbitmq
+    app.kubernetes.io/part-of: collectorshop
+    env: dev
+  name: rabbitmq
+  namespace: collectorshop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/managed-by: argocd
+      app.kubernetes.io/name: rabbitmq
+      app.kubernetes.io/part-of: collectorshop
+      env: dev
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/managed-by: argocd
+        app.kubernetes.io/name: rabbitmq
+        app.kubernetes.io/part-of: collectorshop
+        env: dev
+    spec:
+      containers:
+      - env:
+        - name: RABBITMQ_DEFAULT_USER
+          value: collector
+        - name: RABBITMQ_DEFAULT_PASS
+          value: password
+        image: rabbitmq:3.13-management-alpine
+        livenessProbe:
+          exec:
+            command:
+            - rabbitmq-diagnostics
+            - ping
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+        name: rabbitmq
+        ports:
+        - containerPort: 5672
+        - containerPort: 15672
+        readinessProbe:
+          exec:
+            command:
+            - rabbitmq-diagnostics
+            - ping
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        volumeMounts:
+        - mountPath: /var/lib/rabbitmq
+          name: data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: rabbitmq-data
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/name: web-app
+    app.kubernetes.io/part-of: collectorshop
+    env: dev
+  name: web-app
+  namespace: collectorshop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/managed-by: argocd
+      app.kubernetes.io/name: web-app
+      app.kubernetes.io/part-of: collectorshop
+      env: dev
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/managed-by: argocd
+        app.kubernetes.io/name: web-app
+        app.kubernetes.io/part-of: collectorshop
+        env: dev
+    spec:
+      containers:
+      - image: ghcr.io/stanthbd/collectorshop/web-app:sha-be5c72742c261a2b6d6a08d8b779dc83b46b51d9
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: web-app
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    env: dev
+  name: collectorshop
+  namespace: collectorshop
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: collectorshop.local
+    http:
+      paths:
+      - backend:
+          service:
+            name: web-app
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+      - backend:
+          service:
+            name: catalog-service
+            port:
+              number: 3000
+        path: /api
+        pathType: Prefix
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  labels:
+    app.kubernetes.io/managed-by: argocd
+    app.kubernetes.io/part-of: collectorshop
+    env: dev
+  name: management-ui
+  namespace: collectorshop
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: rabbitmq.local
+    http:
+      paths:
+      - backend:
+          service:
+            name: rabbitmq
+            port:
+              number: 15672
+        path: /
+        pathType: Prefix

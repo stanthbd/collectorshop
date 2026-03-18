@@ -8,6 +8,7 @@ resources:
   - catalog-service.yaml
   - moderation-worker.yaml
   - web-app.yaml
+  - ingress-management.yaml
 
 labels:
   - includeSelectors: true

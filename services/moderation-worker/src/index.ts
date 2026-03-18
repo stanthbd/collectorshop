@@ -91,79 +91,73 @@ export async function setupWorker(channel: amqp.Channel) {
     });
 }
 
+let connection: amqp.Connection | null = null;
+let channel: amqp.Channel | null = null;
+let isConnecting = false;
+
 export async function startWorker() {
-    // Basic health check server for K8s probes
+    if (isConnecting) return;
+    isConnecting = true;
+
+    // Basic health check server for K8s probes (only start once)
     const app = express();
     const port = process.env.HEALTH_PORT || 3000;
-
     app.get('/health', (_req, res) => {
         res.json({ status: 'ok', service: 'moderation-worker', timestamp: new Date().toISOString() });
     });
-
     const server = app.listen(port, () => {
         logger.info({ port }, 'Moderation worker health server started');
     });
 
-    try {
-        const maxAttempts = Number(process.env.RABBITMQ_CONNECT_MAX_ATTEMPTS ?? 60);
-        const baseDelayMs = Number(process.env.RABBITMQ_CONNECT_BASE_DELAY_MS ?? 2000);
+    const connect = async () => {
+        try {
+            logger.info('Connecting to RabbitMQ...');
+            connection = await amqp.connect(RABBITMQ_URL);
 
-        let connection: amqp.ChannelModel | null = null;
-        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-            try {
-                logger.info({ attempt, maxAttempts }, 'Connecting to RabbitMQ...');
-                connection = await amqp.connect(RABBITMQ_URL);
-                break;
-            } catch (err) {
-                const delayMs = Math.min(baseDelayMs * attempt, 15000);
-                logger.warn({ attempt, maxAttempts, delayMs, err }, 'RabbitMQ not ready yet; retrying');
-                await new Promise((r) => setTimeout(r, delayMs));
+            connection.on('error', (err) => {
+                logger.error({ err }, 'RabbitMQ connection error');
+            });
 
-                if (attempt === maxAttempts) {
-                    throw err;
-                }
-            }
+            connection.on('close', () => {
+                logger.warn('RabbitMQ connection closed - reconnecting in 5s');
+                connection = null;
+                channel = null;
+                setTimeout(connect, 5000);
+            });
+
+            channel = await connection.createChannel();
+            channel.on('error', (err) => {
+                logger.error({ err }, 'RabbitMQ channel error');
+            });
+            channel.on('close', () => {
+                logger.warn('RabbitMQ channel closed');
+                channel = null;
+            });
+
+            logger.info('Connected to RabbitMQ successfully');
+            await setupWorker(channel);
+
+        } catch (err) {
+            logger.error({ err }, 'RabbitMQ connection failed - retrying in 5s');
+            connection = null;
+            channel = null;
+            setTimeout(connect, 5000);
         }
-        if (!connection) throw new Error('RabbitMQ connection not established');
+    };
 
-        connection.on('error', (err) => {
-            logger.error({ err }, 'RabbitMQ connection error - exiting for restart');
-            process.exit(1);
-        });
+    await connect();
 
-        connection.on('close', () => {
-            logger.warn('RabbitMQ connection closed - exiting for restart');
-            process.exit(1);
-        });
-
-        const channel = await connection.createChannel();
-        logger.info('Connected to RabbitMQ successfully');
-
-        await setupWorker(channel);
-
-        // Handle graceful shutdown
-        const shutdown = async () => {
-            await channel.close();
-            await connection.close();
-            server.close();
-        };
-
-        process.on('SIGINT', async () => {
-            await shutdown();
-            process.exit(0);
-        });
-
-        return { server, connection, channel, shutdown };
-
-    } catch (error) {
-        if (error instanceof Error) {
-            logger.error({ err: error.message }, 'Failed to start worker');
-        } else {
-            logger.error({ err: String(error) }, 'Failed to start worker (unknown type)');
-        }
+    // Handle graceful shutdown
+    const shutdown = async () => {
+        if (channel) await channel.close();
+        if (connection) await connection.close();
         server.close();
-        throw error;
-    }
+    };
+
+    process.on('SIGINT', async () => {
+        await shutdown();
+        process.exit(0);
+    });
 }
 
 if (process.env.NODE_ENV !== 'test') {

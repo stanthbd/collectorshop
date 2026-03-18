@@ -36,6 +36,7 @@ data:
           "emailVerified": true,
           "firstName": "Admin",
           "lastName": "User",
+          "requiredActions": [],
           "credentials": [{ "type": "password", "value": "admin", "temporary": false }],
           "realmRoles": ["admin"]
         },
@@ -45,6 +46,7 @@ data:
           "emailVerified": true,
           "firstName": "Seller",
           "lastName": "User",
+          "requiredActions": [],
           "credentials": [{ "type": "password", "value": "seller", "temporary": false }],
           "realmRoles": ["seller"]
         }

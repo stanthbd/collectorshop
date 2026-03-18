@@ -9,6 +9,8 @@ resources:
   - moderation-worker.yaml
   - web-app.yaml
   - ingress-management.yaml
+  - keycloak.yaml
+  - keycloak-realm.yaml
 
 labels:
   - includeSelectors: true

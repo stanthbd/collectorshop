@@ -1,3 +1,0 @@
-# Kustomize secrets
-*.env
-*.env.example

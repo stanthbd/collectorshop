@@ -1,0 +1,86 @@
+name: Build, Push (GHCR) & GitOps Update
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: build-push-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  NODE_VERSION: "20"
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: web-app
+            context: apps/web-app
+          - service: catalog-service
+            context: services/catalog-service
+          - service: moderation-worker
+            context: services/moderation-worker
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare
+        id: prep
+        run: |
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}/${{ matrix.service }}" >> $GITHUB_OUTPUT
+          echo "TAG=sha-${GITHUB_SHA}" >> $GITHUB_OUTPUT
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: |
+            ${{ steps.prep.outputs.IMAGE }}:${{ steps.prep.outputs.TAG }}
+            ${{ steps.prep.outputs.IMAGE }}:dev
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  gitops-update:
+    runs-on: ubuntu-latest
+    needs: build-push
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Update kustomize image tags (dev)
+        run: |
+          set -euo pipefail
+          TAG="sha-${GITHUB_SHA}"
+          FILE="deploy/environments/dev/kustomization.yaml"
+          perl -0777 -i -pe "s|(name:\\s*ghcr\\.io/stanthbd/collectorshop/web-app\\s*\\n\\s*newTag:\\s*).+|\\1$TAG|g" "$FILE"
+          perl -0777 -i -pe "s|(name:\\s*ghcr\\.io/stanthbd/collectorshop/catalog-service\\s*\\n\\s*newTag:\\s*).+|\\1$TAG|g" "$FILE"
+          perl -0777 -i -pe "s|(name:\\s*ghcr\\.io/stanthbd/collectorshop/moderation-worker\\s*\\n\\s*newTag:\\s*).+|\\1$TAG|g" "$FILE"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add deploy/environments/dev/kustomization.yaml
+          git commit -m "chore(gitops): bump images to sha-${GITHUB_SHA}" || exit 0
+          git push
+

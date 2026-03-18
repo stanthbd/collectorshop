@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: moderation-worker
+  namespace: collectorshop
+  labels:
+    app.kubernetes.io/name: moderation-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: moderation-worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: moderation-worker
+    spec:
+      containers:
+        - name: moderation-worker
+          image: ghcr.io/stanthbd/collectorshop/moderation-worker:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: HEALTH_PORT
+              value: "3000"
+            - name: RABBITMQ_URL
+              value: amqp://collector:password@rabbitmq.collectorshop.svc.cluster.local:5672
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            failureThreshold: 30
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 384Mi

@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: collectorshop
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: dev
+            namespace: collectorshop
+            path: deploy/environments/dev
+            revision: main
+  template:
+    metadata:
+      name: collectorshop-{{name}}
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/stanthbd/collectorshop.git
+        targetRevision: "{{revision}}"
+        path: "{{path}}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{namespace}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+

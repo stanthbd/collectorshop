@@ -1,0 +1,97 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../../base
+- ingress.yaml
+
+namePrefix: dev-
+namespace: collector-dev
+labels:
+- includeSelectors: true
+  pairs:
+    env: dev
+    managed-by: gitops
+
+secretGenerator:
+- literals:
+  - url=postgresql://collector:password@dev-catalog-db.collector-dev.svc.cluster.local:5432/collector_db?sslmode=disable&connect_timeout=30
+  - database-url=postgresql://collector:password@dev-catalog-db.collector-dev.svc.cluster.local:5432/collector_db?sslmode=disable&connect_timeout=30
+  name: catalog-db-secret
+- literals:
+  - username=admin
+  - password=admin
+  name: keycloak-admin-secret
+- literals:
+  - rabbitmq-url=amqp://collector:password@dev-rabbitmq:5672
+  name: moderation-secrets
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+images:
+- name: collector/catalog-service
+  newName: ghcr.io/stanislasthbd/collector/catalog-service
+  newTag: dev
+- name: collector/moderation-worker
+  newName: ghcr.io/stanislasthbd/collector/moderation-worker
+  newTag: dev
+- name: collector/web-app
+  newName: ghcr.io/stanislasthbd/collector/web-app
+  newTag: dev
+
+configMapGenerator:
+- behavior: replace
+  files:
+  - kong.yml
+  name: kong-declarative-config
+- files:
+  - realm.json=realm.json
+  name: keycloak-realm-config
+
+patches:
+- patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/env/0/value
+      value: dev-catalog-db
+  target:
+    kind: Deployment
+    name: adminer
+- patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/env/3/value
+      value: keycloak.dev.local
+  target:
+    kind: Deployment
+    name: keycloak
+- patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/env/1/value
+      value: dev-loki
+  target:
+    kind: DaemonSet
+    name: promtail
+- patch: |-
+    apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: grafana-datasources
+    data:
+      datasources.yaml: |
+        apiVersion: 1
+        datasources:
+          - name: Loki
+            type: loki
+            access: proxy
+            url: http://dev-loki:3100
+            isDefault: true
+            version: 1
+            editable: false
+          - name: Prometheus
+            type: prometheus
+            access: proxy
+            url: http://dev-prometheus:9090
+            version: 1
+            editable: false
+  target:
+    kind: ConfigMap
+    name: grafana-datasources

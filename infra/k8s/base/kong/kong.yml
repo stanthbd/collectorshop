@@ -1,0 +1,80 @@
+_format_version: "3.0"
+
+services:
+  - name: catalog-service
+    url: http://catalog-service:80
+    routes:
+      - name: catalog-public
+        paths:
+          - /api/catalog
+        methods:
+          - GET
+        strip_path: true
+
+      - name: articles-seller
+        paths:
+          - /api/articles
+        methods:
+          - GET
+          - POST
+        strip_path: true
+
+      - name: my-articles-seller
+        paths:
+          - /api/me/articles
+        methods:
+          - GET
+        strip_path: true
+
+      - name: articles-admin
+        paths:
+          - /api/admin/articles
+        strip_path: true
+
+  - name: web-app
+    url: http://web-app:80
+    routes:
+      - name: web-app-route
+        paths:
+          - /
+        strip_path: false
+
+plugins:
+  - name: jwt
+    route: articles-seller
+    config:
+      uri_param_names: [jwt]
+      claims_to_verify: [exp]
+      key_claim_name: iss
+      secret_is_base64: false
+
+  - name: jwt
+    route: my-articles-seller
+    config:
+      uri_param_names: [jwt]
+      claims_to_verify: [exp]
+      key_claim_name: iss
+      secret_is_base64: false
+
+  - name: jwt
+    route: articles-admin
+    config:
+      uri_param_names: [jwt]
+      claims_to_verify: [exp]
+      key_claim_name: iss
+      secret_is_base64: false
+
+  - name: cors
+    config:
+      origins: ["*"]
+      methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+      headers: [Authorization, Content-Type]
+      credentials: true
+      max_age: 3600
+
+consumers:
+  - username: keycloak-jwt
+    jwt_secrets:
+      - key: http://keycloak:8080/realms/collector
+        algorithm: RS256
+        rsa_public_key: "REPLACE_WITH_KEYCLOAK_RSA_PUBLIC_KEY"

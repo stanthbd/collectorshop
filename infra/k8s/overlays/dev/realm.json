@@ -1,0 +1,80 @@
+{
+    "id": "collector",
+    "realm": "collector",
+    "enabled": true,
+    "roles": {
+        "realm": [
+            {
+                "name": "seller",
+                "description": "Seller Role"
+            },
+            {
+                "name": "admin",
+                "description": "Admin Role"
+            }
+        ]
+    },
+    "users": [
+        {
+            "username": "seller1",
+            "email": "seller1@example.com",
+            "enabled": true,
+            "emailVerified": true,
+            "firstName": "Seller",
+            "lastName": "One",
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "seller1",
+                    "temporary": false
+                }
+            ],
+            "realmRoles": [
+                "seller"
+            ]
+        },
+        {
+            "username": "admin1",
+            "email": "admin1@example.com",
+            "enabled": true,
+            "emailVerified": true,
+            "firstName": "Admin",
+            "lastName": "One",
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "admin1",
+                    "temporary": false
+                }
+            ],
+            "realmRoles": [
+                "admin"
+            ]
+        }
+    ],
+    "clients": [
+        {
+            "clientId": "collector-web",
+            "enabled": true,
+            "publicClient": true,
+            "directAccessGrantsEnabled": true,
+            "redirectUris": [
+                "*"
+            ],
+            "webOrigins": [
+                "*"
+            ]
+        },
+        {
+            "clientId": "collector-api",
+            "enabled": true,
+            "publicClient": false,
+            "secret": "collector-api-secret",
+            "directAccessGrantsEnabled": true,
+            "serviceAccountsEnabled": true,
+            "redirectUris": [
+                "*"
+            ]
+        }
+    ]
+}

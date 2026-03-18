@@ -1,0 +1,113 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+  - ingress.yaml
+
+namePrefix: staging-
+namespace: collector-staging
+labels:
+  - includeSelectors: true
+    pairs:
+      env: staging
+      managed-by: gitops
+
+secretGenerator:
+  - name: catalog-db-secret
+    literals:
+      - url=postgresql://collector:password@staging-catalog-db.collector-staging.svc.cluster.local:5432/collector_db?sslmode=disable&connect_timeout=30
+      - database-url=postgresql://collector:password@staging-catalog-db.collector-staging.svc.cluster.local:5432/collector_db?sslmode=disable&connect_timeout=30
+  - name: keycloak-admin-secret
+    literals:
+      - username=admin
+      - password=admin
+  - name: moderation-secrets
+    literals:
+      - rabbitmq-url=amqp://collector:password@staging-rabbitmq:5672
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+images:
+  - name: collector/catalog-service
+    newName: ghcr.io/stanislasthbd/collector/catalog-service
+    newTag: staging
+  - name: collector/moderation-worker
+    newName: ghcr.io/stanislasthbd/collector/moderation-worker
+    newTag: staging
+  - name: collector/web-app
+    newName: ghcr.io/stanislasthbd/collector/web-app
+    newTag: staging
+
+configMapGenerator:
+  - name: kong-declarative-config
+    behavior: replace
+    files:
+      - kong.yml
+  - name: keycloak-realm-config
+    files:
+      - realm.json=realm.json
+
+patches:
+  # ── Adminer : pointe vers la bonne base staging
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/0/value
+        value: staging-catalog-db
+    target:
+      kind: Deployment
+      name: adminer
+
+  # ── Keycloak : hostname staging
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/3/value
+        value: keycloak.staging.local
+    target:
+      kind: Deployment
+      name: keycloak
+
+  # ── catalog-service : 2 répliques en staging
+  - patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2
+    target:
+      kind: Deployment
+      name: catalog-service
+
+  # ── Promtail : pointe vers le Loki de l'env staging (via env var LOKI_HOST)
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/env/1/value
+        value: staging-loki
+    target:
+      kind: DaemonSet
+      name: promtail
+
+  # ── Grafana : datasource Loki et Prometheus pointent vers les services staging
+  - patch: |-
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: grafana-datasources
+      data:
+        datasources.yaml: |
+          apiVersion: 1
+          datasources:
+            - name: Loki
+              type: loki
+              access: proxy
+              url: http://staging-loki:3100
+              isDefault: true
+              version: 1
+              editable: false
+            - name: Prometheus
+              type: prometheus
+              access: proxy
+              url: http://staging-prometheus:9090
+              version: 1
+              editable: false
+    target:
+      kind: ConfigMap
+      name: grafana-datasources

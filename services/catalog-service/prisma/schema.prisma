@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ArticleStatus {
+  EN_ATTENTE_MODERATION
+  REJETE_AUTO
+  EN_ATTENTE_ADMIN
+  REFUSE
+  PUBLIE
+}
+
+enum ContentCheckStatus {
+  OK
+  KO
+}
+
+enum ModerationDecision {
+  APPROVE
+  REFUSE
+}
+
+model Article {
+  id                   String              @id @default(uuid()) @db.Uuid
+  sellerId             String              @db.Uuid
+  title                String              @db.VarChar(255)
+  description          String
+  price                Decimal             @db.Decimal(10, 2)
+  status               ArticleStatus       @default(EN_ATTENTE_MODERATION)
+  contentCheckStatus   ContentCheckStatus?
+  contentCheckReasons  Json?
+  createdAt            DateTime            @default(now())
+  publishedAt          DateTime?
+
+  moderations          ArticleModeration[]
+
+  @@map("articles")
+}
+
+model ArticleModeration {
+  id         String             @id @default(uuid()) @db.Uuid
+  articleId  String             @db.Uuid
+  adminId    String             @db.Uuid
+  decision   ModerationDecision
+  reason     String?
+  createdAt  DateTime           @default(now())
+
+  article    Article            @relation(fields: [articleId], references: [id])
+
+  @@map("article_moderations")
+}

@@ -1,0 +1,48 @@
+_format_version: "3.0"
+
+services:
+  - name: catalog-service
+    url: http://staging-catalog-service:80
+    routes:
+      - name: catalog-api
+        strip_path: false
+        paths:
+          - /api
+    plugins:
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+          headers: [Authorization, Content-Type, Accept]
+          credentials: true
+          max_age: 3600
+
+  - name: web-app
+    url: http://staging-web-app:80
+    routes:
+      - name: web-app-route
+        paths:
+          - /
+        strip_path: false
+
+  - name: adminer
+    url: http://staging-adminer:80
+    routes:
+      - name: adminer-route
+        preserve_host: true
+        strip_path: true
+        paths:
+          - /adminer
+
+  - name: keycloak
+    url: http://staging-keycloak:8080
+    routes:
+      - name: keycloak-route
+        path_handling: v1
+        paths:
+          - /auth
+          - /js
+          - /realms
+          - /resources
+          - /robots.txt
+        strip_path: false

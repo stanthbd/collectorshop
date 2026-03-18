@@ -15,9 +15,9 @@ labels:
 
 images:
   - name: ghcr.io/stanthbd/collectorshop/web-app
-    newTag: dev
+    newTag: sha-69366b8ac1ffcf5bfad492132e563c609074f8ff
   - name: ghcr.io/stanthbd/collectorshop/catalog-service
-    newTag: dev
+    newTag: sha-69366b8ac1ffcf5bfad492132e563c609074f8ff
   - name: ghcr.io/stanthbd/collectorshop/moderation-worker
-    newTag: dev
+    newTag: sha-69366b8ac1ffcf5bfad492132e563c609074f8ff
 

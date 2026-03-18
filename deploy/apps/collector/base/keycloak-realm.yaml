@@ -33,6 +33,7 @@ data:
         {
           "username": "admin",
           "enabled": true,
+          "email": "admin@collectorshop.local",
           "emailVerified": true,
           "firstName": "Admin",
           "lastName": "User",
@@ -43,6 +44,7 @@ data:
         {
           "username": "seller",
           "enabled": true,
+          "email": "seller@collectorshop.local",
           "emailVerified": true,
           "firstName": "Seller",
           "lastName": "User",

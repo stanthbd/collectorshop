@@ -3,14 +3,14 @@ WORKDIR /app
 RUN apt-get update -y && apt-get install -y openssl
 COPY package*.json ./
 COPY prisma ./prisma/
-RUN npm ci
+RUN npm install
 RUN npx prisma generate
 COPY . .
 RUN npm run build
 RUN npm prune --omit=dev
 
 FROM node:20-slim
-LABEL org.opencontainers.image.source https://github.com/stanthbd/collectorshop
+LABEL org.opencontainers.image.source=https://github.com/stanthbd/collectorshop
 WORKDIR /app
 RUN apt-get update -y && apt-get install -y openssl
 COPY --from=builder /app/dist ./dist

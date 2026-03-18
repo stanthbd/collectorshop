@@ -148,3 +148,6 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 .terraform.lock.hcl
+
+# Argo CD (local-only secrets)
+deploy/argocd/repository-secret.yaml

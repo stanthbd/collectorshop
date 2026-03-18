@@ -105,8 +105,26 @@ export async function startWorker() {
     });
 
     try {
-        logger.info('Connecting to RabbitMQ...');
-        const connection = await amqp.connect(RABBITMQ_URL);
+        const maxAttempts = Number(process.env.RABBITMQ_CONNECT_MAX_ATTEMPTS ?? 60);
+        const baseDelayMs = Number(process.env.RABBITMQ_CONNECT_BASE_DELAY_MS ?? 2000);
+
+        let connection: amqp.ChannelModel | null = null;
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                logger.info({ attempt, maxAttempts }, 'Connecting to RabbitMQ...');
+                connection = await amqp.connect(RABBITMQ_URL);
+                break;
+            } catch (err) {
+                const delayMs = Math.min(baseDelayMs * attempt, 15000);
+                logger.warn({ attempt, maxAttempts, delayMs, err }, 'RabbitMQ not ready yet; retrying');
+                await new Promise((r) => setTimeout(r, delayMs));
+
+                if (attempt === maxAttempts) {
+                    throw err;
+                }
+            }
+        }
+        if (!connection) throw new Error('RabbitMQ connection not established');
 
         connection.on('error', (err) => {
             logger.error({ err }, 'RabbitMQ connection error - exiting for restart');
@@ -149,7 +167,14 @@ export async function startWorker() {
 }
 
 if (process.env.NODE_ENV !== 'test') {
-    startWorker();
+    startWorker().catch((err) => {
+        if (err instanceof Error) {
+            logger.error({ err }, 'Moderation worker failed to start');
+        } else {
+            logger.error({ err: String(err) }, 'Moderation worker failed to start (unknown type)');
+        }
+        process.exit(1);
+    });
 }
 
 // Trigger CI pipeline build tests

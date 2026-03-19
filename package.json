@@ -15,7 +15,8 @@
     "scan": "npm audit && npm run scan --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
     "local:up": "docker compose -f infra/local/docker-compose.yml up -d",
-    "local:down": "docker compose -f infra/local/docker-compose.yml down"
+    "local:down": "docker compose -f infra/local/docker-compose.yml down",
+    "prepare": "husky"
   },
   "devDependencies": {
     "typescript": "^5.0.0",

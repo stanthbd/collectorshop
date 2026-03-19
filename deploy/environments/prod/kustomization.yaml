@@ -2,35 +2,37 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ../../apps/collector/base
-  - ingress.yaml
+- ../../apps/collector/base
+- ingress.yaml
 
 namespace: collectorshop-prod
 
 labels:
-  - includeSelectors: true
-    pairs:
-      env: prod
-      app.kubernetes.io/managed-by: argocd
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/managed-by: argocd
+    env: prod
 
 replicas:
-  - name: catalog-service
-    count: 1
-  - name: web-app
-    count: 1
-  - name: moderation-worker
-    count: 1
-  - name: keycloak
-    count: 1
-  - name: postgres
-    count: 1
-  - name: rabbitmq
-    count: 1
+- count: 1
+  name: catalog-service
+- count: 1
+  name: web-app
+- count: 1
+  name: moderation-worker
+- count: 1
+  name: keycloak
+- count: 1
+  name: postgres
+- count: 1
+  name: rabbitmq
 images:
-  - name: ghcr.io/stanthbd/collectorshop/web-app
-    newTag: latest
-  - name: ghcr.io/stanthbd/collectorshop/catalog-service
-    newTag: latest
-  - name: ghcr.io/stanthbd/collectorshop/moderation-worker
-    newTag: latest
-
+- name: ghcr.io/stanthbd/collectorshop/catalog-service
+  newName: ghcr.io/stanthbd/collectorshop/catalog-service
+  newTag: sha-7ee62c1737dd2b679222b2d2411405626cda12c8
+- name: ghcr.io/stanthbd/collectorshop/moderation-worker
+  newName: ghcr.io/stanthbd/collectorshop/moderation-worker
+  newTag: sha-7ee62c1737dd2b679222b2d2411405626cda12c8
+- name: ghcr.io/stanthbd/collectorshop/web-app
+  newName: ghcr.io/stanthbd/collectorshop/web-app
+  newTag: sha-7ee62c1737dd2b679222b2d2411405626cda12c8

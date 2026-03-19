@@ -19,8 +19,6 @@ spec:
         - name: moderation-worker
           image: ghcr.io/stanthbd/collectorshop/moderation-worker:dev
           imagePullPolicy: IfNotPresent
-          imagePullSecrets:
-            - name: regcred
           ports:
             - containerPort: 3000
           env:

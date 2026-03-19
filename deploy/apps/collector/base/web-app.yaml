@@ -34,8 +34,6 @@ spec:
         - name: web-app
           image: ghcr.io/stanthbd/collectorshop/web-app:dev
           imagePullPolicy: IfNotPresent
-          imagePullSecrets:
-            - name: regcred
           ports:
             - containerPort: 80
           readinessProbe:

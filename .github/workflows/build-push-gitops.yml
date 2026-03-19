@@ -59,28 +59,4 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  gitops-update:
-    runs-on: ubuntu-latest
-    needs: build-push
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: true
-
-      - name: Update kustomize image tags (dev)
-        run: |
-          set -euo pipefail
-          TAG="sha-${GITHUB_SHA}"
-          FILE="deploy/environments/dev/kustomization.yaml"
-          perl -0777 -i -pe "s|(name:\\s*ghcr\\.io/stanthbd/collectorshop/web-app\\s*\\n\\s*newTag:\\s*).+|\\1$TAG|g" "$FILE"
-          perl -0777 -i -pe "s|(name:\\s*ghcr\\.io/stanthbd/collectorshop/catalog-service\\s*\\n\\s*newTag:\\s*).+|\\1$TAG|g" "$FILE"
-          perl -0777 -i -pe "s|(name:\\s*ghcr\\.io/stanthbd/collectorshop/moderation-worker\\s*\\n\\s*newTag:\\s*).+|\\1$TAG|g" "$FILE"
-
-      - name: Commit and push
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add deploy/environments/dev/kustomization.yaml
-          git commit -m "chore(gitops): bump images to sha-${GITHUB_SHA}" || exit 0
-          git push
 

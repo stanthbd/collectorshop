@@ -9,7 +9,7 @@
         "dev": "tsx watch src/index.ts",
         "build": "npx prisma generate && tsc",
         "lint": "eslint src/",
-        "test:unit": "jest tests/unit",
+        "test:unit": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js tests/unit",
         "test:integration": "jest tests/*.integration.spec.ts",
         "scan": "npm audit"
     },

@@ -155,13 +155,15 @@ export async function startWorker() {
     const shutdown = async () => {
         if (channel) await channel.close();
         if (connection) await connection.close();
-        server.close();
+        await new Promise<void>((resolve) => server.close(() => resolve()));
     };
 
     process.on('SIGINT', async () => {
         await shutdown();
         process.exit(0);
     });
+
+    return { shutdown };
 }
 
 if (process.env.NODE_ENV !== 'test') {

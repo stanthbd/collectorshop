@@ -9,7 +9,7 @@
         "dev": "tsx watch src/index.ts",
         "build": "tsc",
         "lint": "eslint src/",
-        "test:unit": "jest",
+        "test:unit": "node --experimental-vm-modules ../../node_modules/jest/bin/jest.js",
         "scan": "npm audit"
     },
     "dependencies": {

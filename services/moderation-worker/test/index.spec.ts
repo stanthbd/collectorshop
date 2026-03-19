@@ -1,18 +1,21 @@
+import { jest } from '@jest/globals';
 import amqp from 'amqplib';
-import { setupWorker } from '../src/index';
-import * as contentCheck from '../src/contentCheck';
 
-jest.mock('../src/contentCheck', () => ({
+jest.unstable_mockModule('../src/contentCheck.js', () => ({
     checkArticleContent: jest.fn(),
 }));
 
-jest.mock('../src/utils/logger', () => ({
+jest.unstable_mockModule('../src/utils/logger.js', () => ({
     logger: {
         info: jest.fn(),
         error: jest.fn(),
         debug: jest.fn(),
     }
 }));
+
+// Import after the modules are mocked
+const { setupWorker } = await import('../src/index.js');
+const contentCheck = await import('../src/contentCheck.js');
 
 describe('Moderation Worker Unit Tests', () => {
     let consumeCallback: (msg: amqp.ConsumeMessage | null) => void;

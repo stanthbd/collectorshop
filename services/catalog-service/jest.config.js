@@ -1,7 +1,16 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
-module.exports = {
-    preset: 'ts-jest',
+export default {
     testEnvironment: 'node',
-    testMatch: ['**/*.spec.ts'],
-    clearMocks: true,
+    extensionsToTreatAsEsm: ['.ts'],
+    moduleNameMapper: {
+        '^(\\.{1,2}/.*)\\.js$': '$1',
+    },
+    transform: {
+        '^.+\\.tsx?$': [
+            'ts-jest',
+            {
+                useESM: true,
+            },
+        ],
+    },
 };

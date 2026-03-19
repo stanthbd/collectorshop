@@ -1,7 +1,6 @@
-import { articleService } from '../../src/services/article.service';
-import { prisma } from '../../src/db';
+import { jest } from '@jest/globals';
 
-jest.mock('../../src/db', () => ({
+jest.unstable_mockModule('../../src/db.js', () => ({
     prisma: {
         article: {
             update: jest.fn(),
@@ -13,6 +12,10 @@ jest.mock('../../src/db', () => ({
     },
 }));
 
+// Import after the mock is set up
+const { articleService } = await import('../../src/services/article.service.js');
+const { prisma } = await import('../../src/db.js');
+
 describe('Unit: ArticleService Admin Moderation', () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -22,7 +25,7 @@ describe('Unit: ArticleService Admin Moderation', () => {
         const adminId = 'adm-123';
         const articleId = 'art-789';
 
-        (prisma.$transaction as jest.Mock).mockResolvedValue([{}, {}]);
+        (prisma.$transaction as any).mockResolvedValue([{}, {}]);
 
         await articleService.approveArticle(adminId, articleId);
 

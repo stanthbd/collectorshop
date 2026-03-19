@@ -1,4 +1,4 @@
-import { checkArticleContent } from '../src/contentCheck';
+import { checkArticleContent } from '../src/contentCheck.js';
 
 describe('Content Check Logic', () => {
     it('should pass valid content', () => {

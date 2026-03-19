@@ -1,0 +1,78 @@
+{"level":"info","time":1773906572787,"service":"moderation-worker","msg":"Connecting to RabbitMQ..."}
+{"level":"error","time":1773906572788,"service":"moderation-worker","err":{"type":"TypeError","message":"ch.on is not a function","stack":"TypeError: ch.on is not a function\n    at connect (C:\\Users\\THIEBAUD\\Desktop\\Playground\\collectorshop\\services\\moderation-worker\\src\\index.ts:133:16)\n    at startWorker (C:\\Users\\THIEBAUD\\Desktop\\Playground\\collectorshop\\services\\moderation-worker\\src\\index.ts:152:5)\n    at Object.<anonymous> (C:\\Users\\THIEBAUD\\Desktop\\Playground\\collectorshop\\services\\moderation-worker\\test\\index.integration.spec.ts:95:24)"},"msg":"RabbitMQ connection failed - retrying in 5s"}
+(node:10772) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"level":"info","time":1773906572798,"service":"moderation-worker","port":3000,"msg":"Moderation worker health server started"}
+FAIL services/moderation-worker/test/index.integration.spec.ts
+  Moderation Worker Integration
+    ├ù should process full flow from setup to publish (26 ms)
+    ├ù should process KO flow (18 ms)
+
+  ÔùÅ Moderation Worker Integration ÔÇ║ should process full flow from setup to publish
+
+    expect(received).toBeDefined()
+
+    Received: undefined
+
+      116 |         const resultPublishCall = publishCalls.find((call) => call[1] === 'article.moderation.result');
+      117 |
+    > 118 |         expect(resultPublishCall).toBeDefined();
+          |                                   ^
+      119 |         if (resultPublishCall) {
+      120 |             const publishedBuffer = resultPublishCall[2] as Buffer;
+      121 |             expect(JSON.parse(publishedBuffer.toString())).toEqual({
+
+      at Object.<anonymous> (test/index.integration.spec.ts:118:35)
+
+  ÔùÅ Moderation Worker Integration ÔÇ║ should process KO flow
+
+    expect(received).toBeDefined()
+
+    Received: undefined
+
+      148 |         const resultPublishCall = publishCalls.find((call) => call[1] === 'article.moderation.result');
+      149 |
+    > 150 |         expect(resultPublishCall).toBeDefined();
+          |                                   ^
+      151 |         if (resultPublishCall) {
+      152 |             const publishedBuffer = resultPublishCall[2] as Buffer;
+      153 |             const res = JSON.parse(publishedBuffer.toString());
+
+      at Object.<anonymous> (test/index.integration.spec.ts:150:35)
+
+Test Suites: 1 failed, 1 total
+Tests:       2 failed, 2 total
+Snapshots:   0 total
+Time:        1.049 s, estimated 2 s
+Ran all test suites matching /services\\moderation-worker\\test\\index.integration.spec.ts/i.
+Jest did not exit one second after the test run has completed.
+
+'This usually means that there are asynchronous operations that weren't stopped in your tests. Consider running Jest with `--detectOpenHandles` to troubleshoot this issue.
+{"level":"info","time":1773906577797,"service":"moderation-worker","msg":"Connecting to RabbitMQ..."}
+{"level":"error","time":1773906577797,"service":"moderation-worker","err":{"type":"TypeError","message":"ch.on is not a function","stack":"TypeError: ch.on is not a function\n    at Timeout.connect [as _onTimeout] (C:\\Users\\THIEBAUD\\Desktop\\Playground\\collectorshop\\services\\moderation-worker\\src\\index.ts:133:16)"},"msg":"RabbitMQ connection failed - retrying in 5s"}
+{"level":"info","time":1773906582798,"service":"moderation-worker","msg":"Connecting to RabbitMQ..."}
+{"level":"error","time":1773906582798,"service":"moderation-worker","err":{"type":"TypeError","message":"ch.on is not a function","stack":"TypeError: ch.on is not a function\n    at Timeout.connect [as _onTimeout] (C:\\Users\\THIEBAUD\\Desktop\\Playground\\collectorshop\\services\\moderation-worker\\src\\index.ts:133:16)"},"msg":"RabbitMQ connection failed - retrying in 5s"}
+{"level":"info","time":1773906587804,"service":"moderation-worker","msg":"Connecting to RabbitMQ..."}
+{"level":"error","time":1773906587805,"service":"moderation-worker","err":{"type":"TypeError","message":"ch.on is not a function","stack":"TypeError: ch.on is not a function\n    at Timeout.connect [as _onTimeout] (C:\\Users\\THIEBAUD\\Desktop\\Playground\\collectorshop\\services\\moderation-worker\\src\\index.ts:133:16)"},"msg":"RabbitMQ connection failed - retrying in 5s"}
+{"level":"info","time":1773906592810,"service":"moderation-worker","msg":"Connecting to RabbitMQ..."}
+{"level":"error","time":1773906592810,"service":"moderation-worker","err":{"type":"TypeError","message":"ch.on is not a function","stack":"TypeError: ch.on is not a function\n    at Timeout.connect [as _onTimeout] (C:\\Users\\THIEBAUD\\Desktop\\Playground\\collectorshop\\services\\moderation-worker\\src\\index.ts:133:16)"},"msg":"RabbitMQ connection failed - retrying in 5s"}
+{"level":"info","time":1773906597819,"service":"moderation-worker","msg":"Connecting to RabbitMQ..."}
+{"level":"error","time":1773906597819,"service":"moderation-worker","err":{"type":"TypeError","message":"ch.on is not a function","stack":"TypeError: ch.on is not a function\n    at Timeout.connect [as _onTimeout] (C:\\Users\\THIEBAUD\\Desktop\\Playground\\collectorshop\\services\\moderation-worker\\src\\index.ts:133:16)"},"msg":"RabbitMQ connection failed - retrying in 5s"}
+{"level":"info","time":1773906602831,"service":"moderation-worker","msg":"Connecting to RabbitMQ..."}
+{"level":"error","time":1773906602831,"service":"moderation-worker","err":{"type":"TypeError","message":"ch.on is not a function","stack":"TypeError: ch.on is not a function\n    at Timeout.connect [as _onTimeout] (C:\\Users\\THIEBAUD\\Desktop\\Playground\\collectorshop\\services\\moderation-worker\\src\\index.ts:133:16)"},"msg":"RabbitMQ connection failed - retrying in 5s"}
+{"level":"info","time":1773906607844,"service":"moderation-worker","msg":"Connecting to RabbitMQ..."}
+{"level":"error","time":1773906607844,"service":"moderation-worker","err":{"type":"TypeError","message":"ch.on is not a function","stack":"TypeError: ch.on is not a function\n    at Timeout.connect [as _onTimeout] (C:\\Users\\THIEBAUD\\Desktop\\Playground\\collectorshop\\services\\moderation-worker\\src\\index.ts:133:16)"},"msg":"RabbitMQ connection failed - retrying in 5s"}
+{"level":"info","time":1773906612846,"service":"moderation-worker","msg":"Connecting to RabbitMQ..."}
+{"level":"error","time":1773906612847,"service":"moderation-worker","err":{"type":"TypeError","message":"ch.on is not a function","stack":"TypeError: ch.on is not a function\n    at Timeout.connect [as _onTimeout] (C:\\Users\\THIEBAUD\\Desktop\\Playground\\collectorshop\\services\\moderation-worker\\src\\index.ts:133:16)"},"msg":"RabbitMQ connection failed - retrying in 5s"}
+{"level":"info","time":1773906617862,"service":"moderation-worker","msg":"Connecting to RabbitMQ..."}
+{"level":"error","time":1773906617863,"service":"moderation-worker","err":{"type":"TypeError","message":"ch.on is not a function","stack":"TypeError: ch.on is not a function\n    at Timeout.connect [as _onTimeout] (C:\\Users\\THIEBAUD\\Desktop\\Playground\\collectorshop\\services\\moderation-worker\\src\\index.ts:133:16)"},"msg":"RabbitMQ connection failed - retrying in 5s"}
+{"level":"info","time":1773906622870,"service":"moderation-worker","msg":"Connecting to RabbitMQ..."}
+{"level":"error","time":1773906622870,"service":"moderation-worker","err":{"type":"TypeError","message":"ch.on is not a function","stack":"TypeError: ch.on is not a function\n    at Timeout.connect [as _onTimeout] (C:\\Users\\THIEBAUD\\Desktop\\Playground\\collectorshop\\services\\moderation-worker\\src\\index.ts:133:16)"},"msg":"RabbitMQ connection failed - retrying in 5s"}
+{"level":"info","time":1773906627872,"service":"moderation-worker","msg":"Connecting to RabbitMQ..."}
+{"level":"error","time":1773906627873,"service":"moderation-worker","err":{"type":"TypeError","message":"ch.on is not a function","stack":"TypeError: ch.on is not a function\n    at Timeout.connect [as _onTimeout] (C:\\Users\\THIEBAUD\\Desktop\\Playground\\collectorshop\\services\\moderation-worker\\src\\index.ts:133:16)"},"msg":"RabbitMQ connection failed - retrying in 5s"}
+{"level":"info","time":1773906632880,"service":"moderation-worker","msg":"Connecting to RabbitMQ..."}
+{"level":"error","time":1773906632881,"service":"moderation-worker","err":{"type":"TypeError","message":"ch.on is not a function","stack":"TypeError: ch.on is not a function\n    at Timeout.connect [as _onTimeout] (C:\\Users\\THIEBAUD\\Desktop\\Playground\\collectorshop\\services\\moderation-worker\\src\\index.ts:133:16)"},"msg":"RabbitMQ connection failed - retrying in 5s"}
+{"level":"info","time":1773906637889,"service":"moderation-worker","msg":"Connecting to RabbitMQ..."}
+{"level":"error","time":1773906637889,"service":"moderation-worker","err":{"type":"TypeError","message":"ch.on is not a function","stack":"TypeError: ch.on is not a function\n    at Timeout.connect [as _onTimeout] (C:\\Users\\THIEBAUD\\Desktop\\Playground\\collectorshop\\services\\moderation-worker\\src\\index.ts:133:16)"},"msg":"RabbitMQ connection failed - retrying in 5s"}
+{"level":"info","time":1773906642901,"service":"moderation-worker","msg":"Connecting to RabbitMQ..."}
+{"level":"error","time":1773906642901,"service":"moderation-worker","err":{"type":"TypeError","message":"ch.on is not a function","stack":"TypeError: ch.on is not a function\n    at Timeout.connect [as _onTimeout] (C:\\Users\\THIEBAUD\\Desktop\\Playground\\collectorshop\\services\\moderation-worker\\src\\index.ts:133:16)"},"msg":"RabbitMQ connection failed - retrying in 5s"}

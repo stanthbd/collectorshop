@@ -1,14 +1,14 @@
+import { jest } from '@jest/globals';
 import amqp from 'amqplib';
-import { startWorker } from '../src/index';
 
 // Mock amqplib entirely for integration testing
-jest.mock('amqplib', () => {
-    let queues: Record<string, ((msg: amqp.ConsumeMessage) => void)[]> = {};
+jest.unstable_mockModule('amqplib', () => {
+    let queues: Record<string, ((msg: any) => void)[]> = {};
     let bindings: { queue: string; exchange: string; routingKey: string }[] = [];
 
     const mockChannel = {
         assertExchange: jest.fn().mockResolvedValue({ exchange: '' }),
-        assertQueue: jest.fn().mockImplementation(async (queue) => {
+        assertQueue: jest.fn().mockImplementation(async (queue: string) => {
             if (!queues[queue]) queues[queue] = [];
             return { queue, messageCount: 0, consumerCount: 0 };
         }),
@@ -16,21 +16,21 @@ jest.mock('amqplib', () => {
             bindings.push({ queue, exchange, routingKey });
             return {};
         }),
-        consume: jest.fn().mockImplementation(async (queue, callback) => {
+        consume: jest.fn().mockImplementation(async (queue: string, callback: any) => {
             if (!queues[queue]) queues[queue] = [];
             queues[queue].push(callback);
             return { consumerTag: 'mock_tag' };
         }),
-        publish: jest.fn().mockImplementation((exchange, routingKey, content, options) => {
+        publish: jest.fn().mockImplementation((exchange: string, routingKey: string, content: Buffer, options: any) => {
             const targetQueues = bindings.filter(b => b.exchange === exchange && b.routingKey === routingKey).map(b => b.queue);
             let delivered = false;
             for (const q of targetQueues) {
                 const callbacks = queues[q] || [];
                 const msg = {
                     fields: { consumerTag: 'mock_tag', deliveryTag: 1, redelivered: false, exchange, routingKey },
-                    properties: { headers: options?.headers || {} } as amqp.MessageProperties,
+                    properties: { headers: options?.headers || {} },
                     content
-                } as amqp.ConsumeMessage;
+                };
                 callbacks.forEach(cb => cb(msg));
                 delivered = true;
             }
@@ -38,6 +38,8 @@ jest.mock('amqplib', () => {
         }),
         ack: jest.fn(),
         nack: jest.fn(),
+        on: jest.fn(),
+        removeAllListeners: jest.fn(),
         close: jest.fn().mockImplementation(() => Promise.resolve()),
     };
 
@@ -49,6 +51,9 @@ jest.mock('amqplib', () => {
     };
 
     return {
+        default: {
+            connect: jest.fn().mockResolvedValue(mockConnection),
+        },
         connect: jest.fn().mockResolvedValue(mockConnection),
         __getMockChannel: () => mockChannel,
         __resetMock: () => {
@@ -59,19 +64,24 @@ jest.mock('amqplib', () => {
     };
 });
 
+// Import after the mock
+const { startWorker } = await import('../src/index.js');
+const amqpMock = await import('amqplib');
+
 interface MockedAmqplib {
     connect: jest.MockedFunction<typeof amqp.connect>;
     __getMockChannel: () => jest.Mocked<amqp.Channel>;
     __resetMock: () => void;
 }
 
-const mockedAmqp = amqp as jest.Mocked<typeof amqp> & MockedAmqplib;
+const mockedAmqp = amqpMock as unknown as (jest.Mocked<typeof amqp> & MockedAmqplib);
 
 describe('Moderation Worker Integration', () => {
     let mockChannel: jest.Mocked<amqp.Channel>;
     let workerHandle: { shutdown: () => Promise<void> } | undefined;
 
     beforeEach(() => {
+        process.env.HEALTH_PORT = '0';
         mockedAmqp.__resetMock();
         mockChannel = mockedAmqp.__getMockChannel();
     });
@@ -87,7 +97,7 @@ describe('Moderation Worker Integration', () => {
         // Start the worker
         workerHandle = await startWorker();
 
-        expect(amqp.connect).toHaveBeenCalled();
+        expect(mockedAmqp.connect).toHaveBeenCalled();
 
         // Simulate publishing an article.created event
         const payload = {

@@ -2,7 +2,7 @@ name: Build, Push (GHCR) & GitOps Update
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop, staging]
   workflow_dispatch:
 
 concurrency:
@@ -30,6 +30,9 @@ jobs:
             context: services/catalog-service
           - service: moderation-worker
             context: services/moderation-worker
+    outputs:
+      image: ${{ steps.prep.outputs.IMAGE }}
+      tag: ${{ steps.prep.outputs.TAG }}
     steps:
       - uses: actions/checkout@v4
 
@@ -55,8 +58,41 @@ jobs:
           push: true
           tags: |
             ${{ steps.prep.outputs.IMAGE }}:${{ steps.prep.outputs.TAG }}
-            ${{ steps.prep.outputs.IMAGE }}:dev
+            ${{ steps.prep.outputs.IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  gitops-update:
+    needs: build-push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set Environment
+        id: env
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]]; then echo "ENV=prod" >> $GITHUB_OUTPUT; fi
+          if [[ "${{ github.ref_name }}" == "develop" ]]; then echo "ENV=dev" >> $GITHUB_OUTPUT; fi
+          if [[ "${{ github.ref_name }}" == "staging" ]]; then echo "ENV=staging" >> $GITHUB_OUTPUT; fi
+
+      - name: Update Manifests
+        run: |
+          ENV=${{ steps.env.outputs.ENV }}
+          SHA_TAG="sha-${GITHUB_SHA}"
+          
+          cd deploy/environments/$ENV
+          kustomize edit set image ghcr.io/${GITHUB_REPOSITORY,,}/web-app=ghcr.io/${GITHUB_REPOSITORY,,}/web-app:$SHA_TAG
+          kustomize edit set image ghcr.io/${GITHUB_REPOSITORY,,}/catalog-service=ghcr.io/${GITHUB_REPOSITORY,,}/catalog-service:$SHA_TAG
+          kustomize edit set image ghcr.io/${GITHUB_REPOSITORY,,}/moderation-worker=ghcr.io/${GITHUB_REPOSITORY,,}/moderation-worker:$SHA_TAG
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore(gitops): update ${{ steps.env.outputs.ENV }} images to sha-${GITHUB_SHA} [skip ci]" || echo "No changes to commit"
+          git push origin ${{ github.ref_name }}
 
 

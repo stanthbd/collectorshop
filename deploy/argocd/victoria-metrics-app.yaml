@@ -31,6 +31,13 @@ spec:
         # Disable AlertManager for local dev to save resources if not needed
         vmalertmanager:
           enabled: false
+        # Disable components that cause naming conflicts or are not needed in Minikube
+        kubeControllerManager:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+        kubeProxy:
+          enabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

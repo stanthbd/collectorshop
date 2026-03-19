@@ -1,40 +1,140 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
-  pull_request:
   push:
-    branches: [main]
+    branches: [main, develop, staging]
+  pull_request:
+    branches: [main, develop, staging]
+  workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
+  packages: write
 
 env:
+  REGISTRY: ghcr.io
   NODE_VERSION: "20"
 
 jobs:
-  lint-test-build:
+  lint-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
-
       - name: Install dependencies
         run: npm ci
-
       - name: Lint
         run: npm run lint
-
       - name: Unit tests
         run: npm run test:unit
 
-      - name: Build
-        run: npm run build
+  sonarcloud:
+    name: SonarCloud Scan
+    runs-on: ubuntu-latest
+    needs: lint-test
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=stanthbd
+            -Dsonar.projectKey=stanthbd_collectorshop
+            -Dsonar.host.url=https://sonarcloud.io
 
+  build-push:
+    if: github.event_name == 'push' && contains(fromJSON('["main", "develop", "staging"]'), github.ref_name)
+    needs: [lint-test, sonarcloud]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: web-app
+            context: apps/web-app
+          - service: catalog-service
+            context: services/catalog-service
+          - service: moderation-worker
+            context: services/moderation-worker
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare
+        id: prep
+        run: |
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}/${{ matrix.service }}" >> $GITHUB_OUTPUT
+          echo "TAG=sha-${GITHUB_SHA}" >> $GITHUB_OUTPUT
+      - uses: docker/setup-buildx-action@v3
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: |
+            ${{ steps.prep.outputs.IMAGE }}:${{ steps.prep.outputs.TAG }}
+            ${{ steps.prep.outputs.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  gitops-update:
+    needs: build-push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set Environment
+        id: env
+        run: |
+          if [[ "${{ github.ref_name }}" == "main" ]]; then echo "ENV=prod" >> $GITHUB_OUTPUT; fi
+          if [[ "${{ github.ref_name }}" == "develop" ]]; then echo "ENV=dev" >> $GITHUB_OUTPUT; fi
+          if [[ "${{ github.ref_name }}" == "staging" ]]; then echo "ENV=staging" >> $GITHUB_OUTPUT; fi
+      - name: Update Manifests
+        run: |
+          ENV=${{ steps.env.outputs.ENV }}
+          SHA_TAG="sha-${GITHUB_SHA}"
+          cd deploy/environments/$ENV
+          kustomize edit set image ghcr.io/${GITHUB_REPOSITORY,,}/web-app=ghcr.io/${GITHUB_REPOSITORY,,}/web-app:$SHA_TAG
+          kustomize edit set image ghcr.io/${GITHUB_REPOSITORY,,}/catalog-service=ghcr.io/${GITHUB_REPOSITORY,,}/catalog-service:$SHA_TAG
+          kustomize edit set image ghcr.io/${GITHUB_REPOSITORY,,}/moderation-worker=ghcr.io/${GITHUB_REPOSITORY,,}/moderation-worker:$SHA_TAG
+      - name: Commit and Push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "chore(gitops): update ${{ steps.env.outputs.ENV }} images to sha-${GITHUB_SHA} [skip ci]" || echo "No changes to commit"
+          git push origin ${{ github.ref_name }}
+
+  discord-notify:
+    if: always()
+    needs: [lint-test, sonarcloud, build-push, gitops-update]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Discord notification
+        uses: rjstone/discord-webhook-notify@v1
+        with:
+          severity: ${{ contains(needs.*.result, 'failure') && 'error' || 'info' }}
+          details: |
+            Workflow: ${{ github.workflow }}
+            Status: ${{ contains(needs.*.result, 'failure') && 'Failed' || 'Success' }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+          webhookUrl: ${{ secrets.DISCORD_WEBHOOK }}

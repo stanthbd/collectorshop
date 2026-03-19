@@ -156,6 +156,9 @@ export async function startWorker() {
         if (channel) await channel.close();
         if (connection) await connection.close();
         await new Promise<void>((resolve) => server.close(() => resolve()));
+        connection = null;
+        channel = null;
+        isConnecting = false;
     };
 
     process.on('SIGINT', async () => {

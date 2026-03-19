@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: netdata-child
+  namespace: netdata
+spec:
+  selector:
+    matchLabels:
+      app: netdata
+      role: child
+  template:
+    metadata:
+      labels:
+        app: netdata
+        role: child
+    spec:
+      serviceAccountName: netdata
+      containers:
+      - name: netdata
+        image: netdata/netdata:latest
+        env:
+        - name: DISABLE_TELEMETRY
+          value: "1"
+        - name: NETDATA_CLAIM_TOKEN
+          value: "" # Optional
+        - name: NETDATA_CLAIM_ROOMS
+          value: "" # Optional
+        - name: K8S_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+        - name: sys
+          mountPath: /host/sys
+          readOnly: true
+        - name: os-release
+          mountPath: /host/usr/lib/os-release
+          readOnly: true
+        - name: docker-sock
+          mountPath: /var/run/docker.sock
+          readOnly: true
+      volumes:
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: sys
+        hostPath:
+          path: /sys
+      - name: os-release
+        hostPath:
+          path: /usr/lib/os-release
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock

@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netdata-parent
+  namespace: netdata
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netdata
+      role: parent
+  template:
+    metadata:
+      labels:
+        app: netdata
+        role: parent
+    spec:
+      serviceAccountName: netdata
+      containers:
+      - name: netdata
+        image: netdata/netdata:latest
+        ports:
+        - name: http
+          containerPort: 19999
+        env:
+        - name: NETDATA_LISTENER_PORT
+          value: "19999"
+        # Since this is local, we don't necessarily need cloud claim here.
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        volumeMounts:
+        - name: netdataconf
+          mountPath: /etc/netdata
+        - name: netdatalib
+          mountPath: /var/lib/netdata
+        - name: netdatacache
+          mountPath: /var/cache/netdata
+      volumes:
+      - name: netdataconf
+        emptyDir: {}
+      - name: netdatalib
+        emptyDir: {}
+      - name: netdatacache
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netdata
+  namespace: netdata
+spec:
+  selector:
+    app: netdata
+    role: parent
+  ports:
+  - name: http
+    port: 19999
+    targetPort: 19999
+  type: ClusterIP

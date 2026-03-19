@@ -151,3 +151,4 @@ override.tf.json
 
 # Argo CD (local-only secrets)
 deploy/argocd/repository-secret.yaml
+integration-test-output.txt

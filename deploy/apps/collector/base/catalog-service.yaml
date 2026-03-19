@@ -40,9 +40,9 @@ spec:
             - name: PORT
               value: "3000"
             - name: DATABASE_URL
-              value: postgresql://collector:password@postgres.collectorshop.svc.cluster.local:5432/collector_db?sslmode=disable
+              value: postgresql://collector:password@postgres:5432/collector_db?sslmode=disable
             - name: RABBITMQ_URL
-              value: amqp://collector:password@rabbitmq.collectorshop.svc.cluster.local:5672
+              value: amqp://collector:password@rabbitmq:5672
           readinessProbe:
             httpGet:
               path: /health

@@ -1,5 +1,4 @@
 import * as amqp from 'amqplib';
-import { Connection, Channel } from 'amqplib';
 import { articleService } from './services/article.service.js';
 import { logger } from './utils/logger.js';
 import { asyncLocalStorage } from './utils/async-storage.js';
@@ -7,8 +6,8 @@ import { asyncLocalStorage } from './utils/async-storage.js';
 const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://collector:password@localhost:5672';
 const EXCHANGE_NAME = 'collector.events';
 
-let connection: any | null = null;
-let channel: any | null = null;
+let connection: amqp.ChannelModel | null = null;
+let channel: amqp.Channel | null = null;
 let isConnecting = false;
 
 export async function connectRabbitMQ() {
@@ -17,39 +16,40 @@ export async function connectRabbitMQ() {
 
     try {
         logger.info('Connecting to RabbitMQ...');
-        connection = await amqp.connect(RABBITMQ_URL);
+        const conn = await amqp.connect(RABBITMQ_URL);
+        connection = conn;
 
-        connection.on('error', (err: any) => {
+        conn.on('error', (err: Error) => {
             logger.error({ err }, 'RabbitMQ connection error');
         });
 
-        connection.on('close', () => {
+        conn.on('close', () => {
             logger.warn('RabbitMQ connection closed - reconnecting in 5s');
             connection = null;
             channel = null;
             setTimeout(reconnect, 5000);
         });
 
-        channel = await connection.createChannel();
-        if (!channel) throw new Error('Failed to create RabbitMQ channel');
+        const ch = await conn.createChannel();
+        channel = ch;
+        if (!ch) throw new Error('Failed to create RabbitMQ channel');
 
-        channel.on('error', (err: any) => {
+        ch.on('error', (err: Error) => {
             logger.error({ err }, 'RabbitMQ channel error');
         });
 
-        channel.on('close', () => {
+        ch.on('close', () => {
             logger.warn('RabbitMQ channel closed');
             channel = null;
         });
 
-        if (!channel) throw new Error('RabbitMQ channel is null unexpectedly');
-        await channel.assertExchange(EXCHANGE_NAME, 'topic', { durable: true });
+        await ch.assertExchange(EXCHANGE_NAME, 'topic', { durable: true });
         logger.info('Connected to RabbitMQ');
         
         // Re-setup consumers if we reconnected
         await setupConsumers();
 
-    } catch (err: any) {
+    } catch (err: unknown) {
         logger.error({ err }, 'RabbitMQ connection failed - retrying in 5s');
         connection = null;
         channel = null;
@@ -69,7 +69,7 @@ export async function closeRabbitMQ() {
     try {
         if (channel) await channel.close();
         if (connection) await connection.close();
-    } catch (err: any) {
+    } catch (err: unknown) {
         logger.error({ err }, 'Error closing RabbitMQ connection');
     } finally {
         channel = null;

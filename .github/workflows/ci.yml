@@ -45,13 +45,13 @@ jobs:
         with:
           fetch-depth: 0 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.organization=stanislasthbd
+            -Dsonar.organization=stanthbd
             -Dsonar.projectKey=stanthbd_collectorshop
             -Dsonar.host.url=https://sonarcloud.io
 

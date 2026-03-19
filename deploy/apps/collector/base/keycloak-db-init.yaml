@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: keycloak-db-init
+spec:
+  template:
+    spec:
+      containers:
+        - name: psql
+          image: postgres:15-alpine
+          command:
+            - /bin/sh
+            - -c
+            - |
+              psql -h postgres -U collector -d collector_db -c "CREATE SCHEMA IF NOT EXISTS keycloak;"
+          env:
+            - name: PGPASSWORD
+              value: password
+      restartPolicy: OnFailure
+  backoffLimit: 4

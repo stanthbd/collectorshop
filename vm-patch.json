@@ -1,0 +1,10 @@
+{
+  "operation": {
+    "sync": {
+      "prune": true,
+      "syncOptions": [
+        "CreateNamespace=true"
+      ]
+    }
+  }
+}

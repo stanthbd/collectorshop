@@ -10,8 +10,10 @@ spec:
     chart: victoria-metrics-k8s-stack
     targetRevision: 0.38.2
     helm:
+      releaseName: vm
       values: |
-        fullnameOverride: vm-stack
+        fullnameOverride: vm
+        nameOverride: vm
         grafana:
           enabled: true
           ingress:
@@ -38,3 +40,4 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - Replace=true

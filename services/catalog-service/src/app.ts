@@ -1,9 +1,9 @@
 import 'express-async-errors';
 import express, { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
-import articlesRouter from './routes/articles';
-import { logger } from './utils/logger';
-import { asyncLocalStorage } from './utils/async-storage';
+import articlesRouter from './routes/articles.js';
+import { logger } from './utils/logger.js';
+import { asyncLocalStorage } from './utils/async-storage.js';
 
 const app = express();
 app.use(express.json());

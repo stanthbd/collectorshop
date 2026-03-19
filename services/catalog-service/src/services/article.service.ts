@@ -1,6 +1,6 @@
-import { prisma } from '../db';
-import { publishEvent } from '../rabbitmq';
-import { logger } from '../utils/logger';
+import { prisma } from '../db.js';
+import { publishEvent } from '../rabbitmq.js';
+import { logger } from '../utils/logger.js';
 
 export class ArticleService {
     async createArticle(data: { sellerId: string; title: string; description: string; price: number }) {

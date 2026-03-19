@@ -1,7 +1,7 @@
 import amqp from 'amqplib';
-import { articleService } from './services/article.service';
-import { logger } from './utils/logger';
-import { asyncLocalStorage } from './utils/async-storage';
+import { articleService } from './services/article.service.js';
+import { logger } from './utils/logger.js';
+import { asyncLocalStorage } from './utils/async-storage.js';
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://collector:password@localhost:5672';
 const EXCHANGE_NAME = 'collector.events';

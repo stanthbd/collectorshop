@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { AuthRequest } from '../middleware/auth';
-import { articleService } from '../services/article.service';
-import { logger } from '../utils/logger';
+import { AuthRequest } from '../middleware/auth.js';
+import { articleService } from '../services/article.service.js';
+import { logger } from '../utils/logger.js';
 
 const CreateArticleSchema = z.object({
     title: z.string().min(5).max(100),

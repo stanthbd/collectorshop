@@ -1,7 +1,7 @@
 import amqp from 'amqplib';
-import { checkArticleContent } from './contentCheck';
-import { logger } from './utils/logger';
-import { asyncLocalStorage } from './utils/async-storage';
+import { checkArticleContent } from './contentCheck.js';
+import { logger } from './utils/logger.js';
+import { asyncLocalStorage } from './utils/async-storage.js';
 import express from 'express';
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://collector:password@localhost:5672';

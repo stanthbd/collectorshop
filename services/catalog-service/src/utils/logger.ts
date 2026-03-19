@@ -1,5 +1,5 @@
 import pino from 'pino';
-import { asyncLocalStorage } from './async-storage';
+import { asyncLocalStorage } from './async-storage.js';
 
 export const logger = pino({
     level: process.env.LOG_LEVEL || 'info',

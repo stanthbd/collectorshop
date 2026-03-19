@@ -2,11 +2,12 @@
     "name": "catalog-service",
     "version": "1.0.0",
     "description": "Node.js API for the catalog",
+    "type": "module",
     "main": "dist/index.js",
     "scripts": {
         "start": "npx prisma migrate deploy && node dist/index.js",
         "dev": "tsx watch src/index.ts",
-        "build": "tsc",
+        "build": "npx prisma generate && tsc",
         "lint": "eslint src/",
         "test:unit": "jest tests/unit",
         "test:integration": "jest tests/*.integration.spec.ts",

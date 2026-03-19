@@ -21,3 +21,19 @@ images:
   - name: ghcr.io/stanthbd/collectorshop/moderation-worker
     newTag: sha-762b2d000541564515c9b46447ce70fb221d5be6
 
+patches:
+  - target:
+      kind: Ingress
+      name: management-ui
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: staging.rabbitmq.local
+  - target:
+      kind: Ingress
+      name: keycloak
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: staging.keycloak.local
+

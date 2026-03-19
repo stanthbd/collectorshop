@@ -15,11 +15,11 @@ labels:
 
 images:
   - name: ghcr.io/stanthbd/collectorshop/web-app
-    newTag: sha-830bb03ff4ae0317da02fbd740efaa5a7ddb67ac
+    newTag: sha-15d77ac0c1423e8a4f89f7982c872c107272de49
   - name: ghcr.io/stanthbd/collectorshop/catalog-service
-    newTag: sha-830bb03ff4ae0317da02fbd740efaa5a7ddb67ac
+    newTag: sha-15d77ac0c1423e8a4f89f7982c872c107272de49
   - name: ghcr.io/stanthbd/collectorshop/moderation-worker
-    newTag: sha-830bb03ff4ae0317da02fbd740efaa5a7ddb67ac
+    newTag: sha-15d77ac0c1423e8a4f89f7982c872c107272de49
 
 patches:
   - target:

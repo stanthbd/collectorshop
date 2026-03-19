@@ -11,10 +11,6 @@ spec:
             namespace: collectorshop
             path: deploy/environments/dev
             revision: main
-          - name: netdata
-            namespace: netdata
-            path: deploy/apps/netdata/base
-            revision: main
   template:
     metadata:
       name: collectorshop-{{name}}

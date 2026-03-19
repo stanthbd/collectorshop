@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: netdata
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://netdata.github.io/helmchart/
+    chart: netdata
+    targetRevision: 3.7.12
+    helm:
+      values: |
+        image:
+          tag: stable
+        parent:
+          claiming:
+            enabled: true
+            token: VJXjSOLGib8C3kh5iJyLxYnRw_e8K6QebPE-HPI2VfaWW1RN0OEbGIpMrpb7Tf_a4QJ9yNOHvCUImp09AoF6DS3TWtFrkOWcaPHS1rJ2g5MU5P7wjgxGRFVm7SOvu4K3aWyvKeo
+            rooms: 92ed5d78-e657-4a63-b3c1-0fa7c6e15e4c
+          ingress:
+            enabled: true
+            ingressClassName: nginx
+            annotations:
+              nginx.ingress.kubernetes.io/ssl-redirect: "false"
+            hosts:
+              - host: netdata.local
+                paths:
+                  - path: /
+                    pathType: Prefix
+        child:
+          claiming:
+            enabled: true
+            token: VJXjSOLGib8C3kh5iJyLxYnRw_e8K6QebPE-HPI2VfaWW1RN0OEbGIpMrpb7Tf_a4QJ9yNOHvCUImp09AoF6DS3TWtFrkOWcaPHS1rJ2g5MU5P7wjgxGRFVm7SOvu4K3aWyvKeo
+            rooms: 92ed5d78-e657-4a63-b3c1-0fa7c6e15e4c
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: netdata
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

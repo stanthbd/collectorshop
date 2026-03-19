@@ -11,6 +11,7 @@ resources:
   - ingress-management.yaml
   - keycloak.yaml
   - keycloak-realm.yaml
+  - keycloak-db-init.yaml
 
 labels:
   - includeSelectors: true

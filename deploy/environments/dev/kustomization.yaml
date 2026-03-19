@@ -2,38 +2,40 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  - ../../apps/collector/base
-  - ingress.yaml
+- ../../apps/collector/base
+- ingress.yaml
 
 namespace: collectorshop-dev
 
 labels:
-  - includeSelectors: true
-    pairs:
-      env: dev
-      app.kubernetes.io/managed-by: argocd
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/managed-by: argocd
+    env: dev
 
 images:
-  - name: ghcr.io/stanthbd/collectorshop/web-app
-    newTag: latest
-  - name: ghcr.io/stanthbd/collectorshop/catalog-service
-    newTag: latest
-  - name: ghcr.io/stanthbd/collectorshop/moderation-worker
-    newTag: latest
+- name: ghcr.io/stanthbd/collectorshop/catalog-service
+  newName: ghcr.io/stanthbd/collectorshop/catalog-service
+  newTag: sha-7ee62c1737dd2b679222b2d2411405626cda12c8
+- name: ghcr.io/stanthbd/collectorshop/moderation-worker
+  newName: ghcr.io/stanthbd/collectorshop/moderation-worker
+  newTag: sha-7ee62c1737dd2b679222b2d2411405626cda12c8
+- name: ghcr.io/stanthbd/collectorshop/web-app
+  newName: ghcr.io/stanthbd/collectorshop/web-app
+  newTag: sha-7ee62c1737dd2b679222b2d2411405626cda12c8
 
 patches:
-  - target:
-      kind: Ingress
-      name: management-ui
-    patch: |-
-      - op: replace
-        path: /spec/rules/0/host
-        value: dev.rabbitmq.local
-  - target:
-      kind: Ingress
-      name: keycloak
-    patch: |-
-      - op: replace
-        path: /spec/rules/0/host
-        value: dev.keycloak.local
-
+- patch: |-
+    - op: replace
+      path: /spec/rules/0/host
+      value: dev.rabbitmq.local
+  target:
+    kind: Ingress
+    name: management-ui
+- patch: |-
+    - op: replace
+      path: /spec/rules/0/host
+      value: dev.keycloak.local
+  target:
+    kind: Ingress
+    name: keycloak

@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: keycloak
-  namespace: collectorshop
   labels:
     app.kubernetes.io/name: keycloak
 spec:
@@ -64,7 +63,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: keycloak
-  namespace: collectorshop
 spec:
   selector:
     app.kubernetes.io/name: keycloak
@@ -77,7 +75,6 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: keycloak
-  namespace: collectorshop
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:

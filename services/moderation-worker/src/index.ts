@@ -94,6 +94,7 @@ export async function setupWorker(channel: amqp.Channel) {
 let connection: amqp.ChannelModel | null = null;
 let channel: amqp.Channel | null = null;
 let isConnecting = false;
+let reconnectTimeout: NodeJS.Timeout | null = null;
 
 export async function startWorker() {
     if (isConnecting) return;
@@ -108,8 +109,11 @@ export async function startWorker() {
     const server = app.listen(port, () => {
         logger.info({ port }, 'Moderation worker health server started');
     });
-
     const connect = async () => {
+        if (reconnectTimeout) {
+            clearTimeout(reconnectTimeout);
+            reconnectTimeout = null;
+        }
         try {
             logger.info('Connecting to RabbitMQ...');
             const conn = await amqp.connect(RABBITMQ_URL);
@@ -123,7 +127,9 @@ export async function startWorker() {
                 logger.warn('RabbitMQ connection closed - reconnecting in 5s');
                 connection = null;
                 channel = null;
-                setTimeout(connect, 5000);
+                if (!reconnectTimeout) {
+                    reconnectTimeout = setTimeout(connect, 5000);
+                }
             });
 
             const ch = await conn.createChannel();
@@ -145,7 +151,9 @@ export async function startWorker() {
             logger.error({ err }, 'RabbitMQ connection failed - retrying in 5s');
             connection = null;
             channel = null;
-            setTimeout(connect, 5000);
+            if (!reconnectTimeout) {
+                reconnectTimeout = setTimeout(connect, 5000);
+            }
         }
     };
 
@@ -153,6 +161,10 @@ export async function startWorker() {
 
     // Handle graceful shutdown
     const shutdown = async () => {
+        if (reconnectTimeout) {
+            clearTimeout(reconnectTimeout);
+            reconnectTimeout = null;
+        }
         if (channel) await channel.close();
         if (connection) await connection.close();
         await new Promise<void>((resolve) => server.close(() => resolve()));

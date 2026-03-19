@@ -1,27 +1,27 @@
-import { jest } from '@jest/globals';
-import amqp from 'amqplib';
+import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import * as amqp from 'amqplib';
 
 // Mock amqplib entirely for integration testing
 jest.unstable_mockModule('amqplib', () => {
     let queues: Record<string, ((msg: any) => void)[]> = {};
     let bindings: { queue: string; exchange: string; routingKey: string }[] = [];
 
-    const mockChannel = {
-        assertExchange: jest.fn().mockResolvedValue({ exchange: '' }),
-        assertQueue: jest.fn().mockImplementation(async (queue: string) => {
+    const mockChannel: any = {
+        assertExchange: (jest.fn() as any).mockResolvedValue({ exchange: '' }),
+        assertQueue: (jest.fn() as any).mockImplementation(async (queue: string) => {
             if (!queues[queue]) queues[queue] = [];
             return { queue, messageCount: 0, consumerCount: 0 };
         }),
-        bindQueue: jest.fn().mockImplementation(async (queue: string, exchange: string, routingKey: string) => {
+        bindQueue: (jest.fn() as any).mockImplementation(async (queue: string, exchange: string, routingKey: string) => {
             bindings.push({ queue, exchange, routingKey });
             return {};
         }),
-        consume: jest.fn().mockImplementation(async (queue: string, callback: any) => {
+        consume: (jest.fn() as any).mockImplementation(async (queue: string, callback: any) => {
             if (!queues[queue]) queues[queue] = [];
             queues[queue].push(callback);
             return { consumerTag: 'mock_tag' };
         }),
-        publish: jest.fn().mockImplementation((exchange: string, routingKey: string, content: Buffer, options: any) => {
+        publish: (jest.fn() as any).mockImplementation((exchange: string, routingKey: string, content: Buffer, options: any) => {
             const targetQueues = bindings.filter(b => b.exchange === exchange && b.routingKey === routingKey).map(b => b.queue);
             let delivered = false;
             for (const q of targetQueues) {
@@ -43,8 +43,8 @@ jest.unstable_mockModule('amqplib', () => {
         close: jest.fn().mockImplementation(() => Promise.resolve()),
     };
 
-    const mockConnection = {
-        createChannel: jest.fn().mockResolvedValue(mockChannel),
+    const mockConnection: any = {
+        createChannel: (jest.fn() as any).mockResolvedValue(mockChannel),
         close: jest.fn().mockImplementation(() => Promise.resolve()),
         on: jest.fn(),
         removeAllListeners: jest.fn(),
@@ -52,16 +52,16 @@ jest.unstable_mockModule('amqplib', () => {
 
     return {
         default: {
-            connect: jest.fn().mockResolvedValue(mockConnection),
+            connect: (jest.fn() as any).mockResolvedValue(mockConnection),
         },
-        connect: jest.fn().mockResolvedValue(mockConnection),
+        connect: (jest.fn() as any).mockResolvedValue(mockConnection),
         __getMockChannel: () => mockChannel,
         __resetMock: () => {
             queues = {};
             bindings = [];
             jest.clearAllMocks();
         }
-    };
+    } as any;
 });
 
 // Import after the mock
@@ -112,7 +112,7 @@ describe('Moderation Worker Integration', () => {
         });
 
         // Small delay to let promises resolve if any
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise(resolve => setTimeout(resolve, 50));
 
         // Wait to make sure output gets published
         const publishCalls = mockChannel.publish.mock.calls;
@@ -145,7 +145,7 @@ describe('Moderation Worker Integration', () => {
             headers: {}
         });
 
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise(resolve => setTimeout(resolve, 50));
 
         const publishCalls = mockChannel.publish.mock.calls;
         const resultPublishCall = publishCalls.find((call) => call[1] === 'article.moderation.result');

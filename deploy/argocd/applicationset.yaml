@@ -8,8 +8,16 @@ spec:
     - list:
         elements:
           - name: dev
-            namespace: collectorshop
+            namespace: collectorshop-dev
             path: deploy/environments/dev
+            revision: develop
+          - name: staging
+            namespace: collectorshop-staging
+            path: deploy/environments/staging
+            revision: staging
+          - name: prod
+            namespace: collectorshop-prod
+            path: deploy/environments/prod
             revision: main
   template:
     metadata:

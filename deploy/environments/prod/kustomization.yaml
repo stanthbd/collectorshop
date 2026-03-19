@@ -5,12 +5,12 @@ resources:
   - ../../apps/collector/base
   - ingress.yaml
 
-namespace: collectorshop-dev
+namespace: collectorshop-prod
 
 labels:
   - includeSelectors: true
     pairs:
-      env: dev
+      env: prod
       app.kubernetes.io/managed-by: argocd
 
 images:

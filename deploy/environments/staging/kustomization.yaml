@@ -39,14 +39,14 @@ patches:
 
 replicas:
   - name: catalog-service
-    count: 0
+    count: 1
   - name: web-app
-    count: 0
+    count: 1
   - name: moderation-worker
-    count: 0
+    count: 1
   - name: keycloak
-    count: 0
+    count: 1
   - name: postgres
-    count: 0
+    count: 1
   - name: rabbitmq
-    count: 0
+    count: 1

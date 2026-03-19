@@ -11,6 +11,7 @@ spec:
     targetRevision: 0.38.2
     helm:
       values: |
+        fullnameOverride: vm-stack
         grafana:
           enabled: true
           ingress:

@@ -16,13 +16,13 @@ labels:
 images:
 - name: ghcr.io/stanthbd/collectorshop/catalog-service
   newName: ghcr.io/stanthbd/collectorshop/catalog-service
-  newTag: sha-73c3619b6f8858f33b0620dea136213645ce629a
+  newTag: sha-419668290590f0abd4c737847cf46759265e93f0
 - name: ghcr.io/stanthbd/collectorshop/moderation-worker
   newName: ghcr.io/stanthbd/collectorshop/moderation-worker
-  newTag: sha-73c3619b6f8858f33b0620dea136213645ce629a
+  newTag: sha-419668290590f0abd4c737847cf46759265e93f0
 - name: ghcr.io/stanthbd/collectorshop/web-app
   newName: ghcr.io/stanthbd/collectorshop/web-app
-  newTag: sha-73c3619b6f8858f33b0620dea136213645ce629a
+  newTag: sha-419668290590f0abd4c737847cf46759265e93f0
 
 patches:
 - patch: |-

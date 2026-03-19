@@ -39,6 +39,27 @@ patches:
   target:
     kind: Ingress
     name: keycloak
+- patch: |-
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/limits/memory
+      value: 1Gi
+    - op: replace
+      path: /spec/template/spec/containers/0/resources/requests/memory
+      value: 512Mi
+  target:
+    kind: Deployment
+    name: keycloak
+- patch: |-
+    - op: add
+      path: /spec/template/spec/containers/0/resources
+      value:
+        limits:
+          memory: 512Mi
+        requests:
+          memory: 256Mi
+  target:
+    kind: Deployment
+    name: postgres
 
 replicas:
 - count: 1

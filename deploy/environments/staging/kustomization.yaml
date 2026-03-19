@@ -37,3 +37,16 @@ patches:
         path: /spec/rules/0/host
         value: staging.keycloak.local
 
+replicas:
+  - name: catalog-service
+    count: 0
+  - name: web-app
+    count: 0
+  - name: moderation-worker
+    count: 0
+  - name: keycloak
+    count: 0
+  - name: postgres
+    count: 0
+  - name: rabbitmq
+    count: 0

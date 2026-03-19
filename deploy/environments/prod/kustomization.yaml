@@ -13,6 +13,19 @@ labels:
       env: prod
       app.kubernetes.io/managed-by: argocd
 
+replicas:
+  - name: catalog-service
+    count: 0
+  - name: web-app
+    count: 0
+  - name: moderation-worker
+    count: 0
+  - name: keycloak
+    count: 0
+  - name: postgres
+    count: 0
+  - name: rabbitmq
+    count: 0
 images:
   - name: ghcr.io/stanthbd/collectorshop/web-app
     newTag: latest

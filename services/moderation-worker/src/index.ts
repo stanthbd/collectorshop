@@ -192,4 +192,4 @@ if (process.env.NODE_ENV !== 'test') {
     });
 }
 
-// Trigger CI pipeline build tests
+// Trigger CI pipeline build test

@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: victoria-metrics
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://victoriametrics.github.io/helm-charts/
+    chart: victoria-metrics-k8s-stack
+    targetRevision: 0.38.2
+    helm:
+      values: |
+        grafana:
+          enabled: true
+          ingress:
+            enabled: true
+            ingressClassName: nginx
+            annotations:
+              nginx.ingress.kubernetes.io/ssl-redirect: "false"
+            hosts:
+              - grafana.local
+        vmsingle:
+          enabled: true
+          spec:
+            retentionPeriod: "30d"
+            replicaCount: 1
+        # Disable AlertManager for local dev to save resources if not needed
+        vmalertmanager:
+          enabled: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import pino from 'pino';
 import jwt from 'jsonwebtoken';
-import { asyncLocalStorage } from './async-storage.js';
+import { asyncLocalStorage } from '../utils/async-storage.js';
 
 export interface AuthRequest extends Request {
     user?: {

@@ -1,4 +1,5 @@
-import amqp from 'amqplib';
+import * as amqp from 'amqplib';
+import { Connection, Channel } from 'amqplib';
 import { checkArticleContent } from './contentCheck.js';
 import { logger } from './utils/logger.js';
 import { asyncLocalStorage } from './utils/async-storage.js';
@@ -20,7 +21,7 @@ interface ModerationResultEvent {
     reasons: string[];
 }
 
-export async function setupWorker(channel: amqp.Channel) {
+export async function setupWorker(channel: any) {
     // Ensure exchange exists
     await channel.assertExchange(EXCHANGE_NAME, 'topic', { durable: true });
 
@@ -36,7 +37,7 @@ export async function setupWorker(channel: amqp.Channel) {
 
     logger.info({ queue: q.queue }, `Waiting for messages. To exit press CTRL+C`);
 
-    await channel.consume(q.queue, (msg) => {
+    await channel.consume(q.queue, (msg: any) => {
         if (msg !== null) {
             const traceId = msg.properties.headers?.['x-trace-id'];
             const userId = msg.properties.headers?.['x-user-id'];
@@ -75,7 +76,7 @@ export async function setupWorker(channel: amqp.Channel) {
 
                     // Ack the message
                     channel.ack(msg);
-                } catch (err) {
+                } catch (err: any) {
                     if (err instanceof Error) {
                         logger.error({ err }, 'Error processing message');
                     } else {
@@ -91,8 +92,8 @@ export async function setupWorker(channel: amqp.Channel) {
     });
 }
 
-let connection: amqp.Connection | null = null;
-let channel: amqp.Channel | null = null;
+let connection: any | null = null;
+let channel: any | null = null;
 let isConnecting = false;
 
 export async function startWorker() {
@@ -102,7 +103,7 @@ export async function startWorker() {
     // Basic health check server for K8s probes (only start once)
     const app = express();
     const port = process.env.HEALTH_PORT || 3000;
-    app.get('/health', (_req, res) => {
+    app.get('/health', (_req: any, res: any) => {
         res.json({ status: 'ok', service: 'moderation-worker', timestamp: new Date().toISOString() });
     });
     const server = app.listen(port, () => {
@@ -114,7 +115,7 @@ export async function startWorker() {
             logger.info('Connecting to RabbitMQ...');
             connection = await amqp.connect(RABBITMQ_URL);
 
-            connection.on('error', (err) => {
+            connection.on('error', (err: any) => {
                 logger.error({ err }, 'RabbitMQ connection error');
             });
 
@@ -126,7 +127,9 @@ export async function startWorker() {
             });
 
             channel = await connection.createChannel();
-            channel.on('error', (err) => {
+            if (!channel) throw new Error('Failed to create RabbitMQ channel');
+
+            channel.on('error', (err: any) => {
                 logger.error({ err }, 'RabbitMQ channel error');
             });
             channel.on('close', () => {
@@ -134,10 +137,11 @@ export async function startWorker() {
                 channel = null;
             });
 
+            if (!channel) throw new Error('RabbitMQ channel is null unexpectedly');
             logger.info('Connected to RabbitMQ successfully');
             await setupWorker(channel);
 
-        } catch (err) {
+        } catch (err: any) {
             logger.error({ err }, 'RabbitMQ connection failed - retrying in 5s');
             connection = null;
             channel = null;

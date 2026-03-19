@@ -29,10 +29,10 @@ replicas:
 images:
 - name: ghcr.io/stanthbd/collectorshop/catalog-service
   newName: ghcr.io/stanthbd/collectorshop/catalog-service
-  newTag: sha-ba7f8658f7dc8bab03c37058dedc8287d7c34664
+  newTag: sha-5f1b6c03c038bc1cb59943414d61955e85d9369e
 - name: ghcr.io/stanthbd/collectorshop/moderation-worker
   newName: ghcr.io/stanthbd/collectorshop/moderation-worker
-  newTag: sha-ba7f8658f7dc8bab03c37058dedc8287d7c34664
+  newTag: sha-5f1b6c03c038bc1cb59943414d61955e85d9369e
 - name: ghcr.io/stanthbd/collectorshop/web-app
   newName: ghcr.io/stanthbd/collectorshop/web-app
-  newTag: sha-ba7f8658f7dc8bab03c37058dedc8287d7c34664
+  newTag: sha-5f1b6c03c038bc1cb59943414d61955e85d9369e
